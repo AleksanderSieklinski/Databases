@@ -1,6 +1,5 @@
-create schema zadanie6_11_autobusy ;
-set search_path to zadanie6_11_autobusy ;
-
+create schema zadanie6_11_autobusy;
+set search_path to zadanie6_11_autobusy;
 CREATE TABLE przystanek (
                 Nazwa_przystanku VARCHAR NOT NULL,
                 CONSTRAINT przystanek_pk PRIMARY KEY (Nazwa_przystanku)
@@ -17,6 +16,7 @@ CREATE TABLE przystanek_odjazd_tramwaj (
                 Czas_odjazdu TIME NOT NULL,
                 Nr_tramwaju INTEGER NOT NULL,
                 Nazwa_przystanku VARCHAR NOT NULL,
+                Kierunek VARCHAR NOT NULL,
                 CONSTRAINT przystanek_odjazd_tramwaj_pk PRIMARY KEY (Czas_odjazdu, Nr_tramwaju, Nazwa_przystanku)
 );
 
@@ -31,6 +31,7 @@ CREATE TABLE przystanek_odjazd_autobus (
                 Czas_odjazdu TIME NOT NULL,
                 Nr_autobusu INTEGER NOT NULL,
                 Nazwa_przystanku VARCHAR NOT NULL,
+                Kierunek VARCHAR NOT NULL,
                 CONSTRAINT przystanek_odjazd_autobus_pk PRIMARY KEY (Czas_odjazdu, Nr_autobusu, Nazwa_przystanku)
 );
 

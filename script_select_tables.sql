@@ -1,14 +1,13 @@
 set search_path to zadanie6_11_autobusy;
 
-select distinct nr_tramwaju from przystanek_odjazd_tramwaj where nazwa_przystanku = 'Kraków Bieżanów';
+-- dla wybranego przystanku -> znaleźć linie zatrzymujące się na tym przystanku
+select nr_tramwaju from przystanek_odjazd_tramwaj pot where pot.nazwa_przystanku = 'Kraków Bieżanów' group by pot.nr_tramwaju order by pot.nr_tramwaju;
+select nr_autobusu from przystanek_odjazd_autobus poa where poa.nazwa_przystanku = 'Kraków Bieżanów' group by poa.nr_autobusu order by poa.nr_autobusu;
 
-select distinct nr_autobusu from przystanek_odjazd_autobus where nazwa_przystanku = 'Kraków Bieżanów';
+-- dla wybranego przystanku i linii -> znaleźć czasy odjazdu
+select czas_odjazdu,kierunek as przystanek_końcowy from przystanek_odjazd_tramwaj pot where pot.nr_tramwaju = 2 and pot.nazwa_przystanku = 'Kraków Bieżanów' order by pot.kierunek,pot.czas_odjazdu;
+select czas_odjazdu,kierunek as przystanek_końcowy from przystanek_odjazd_autobus poa where poa.nr_autobusu = 102 and poa.nazwa_przystanku = 'Kraków Bieżanów' order by poa.kierunek,poa.czas_odjazdu;
 
-select czas_odjazdu from przystanek_odjazd_tramwaj where przystanek_odjazd_tramwaj.nr_tramwaju = 2 and przystanek_odjazd_tramwaj.nazwa_przystanku = 'Kraków Bieżanów';
-
-select czas_odjazdu from przystanek_odjazd_autobus where przystanek_odjazd_autobus.nr_autobusu = 102 and przystanek_odjazd_autobus.nazwa_przystanku = 'Kraków Bieżanów';
-
-select nazwa_przystanku,czas_odjazdu from przystanek_odjazd_tramwaj where przystanek_odjazd_tramwaj.nr_tramwaju = 1;
-
-select nazwa_przystanku,czas_odjazdu from przystanek_odjazd_autobus where przystanek_odjazd_autobus.nr_autobusu = 101;
-
+-- dla wybranej linii -> znaleźć przystanki i czasy odjazdy z przystanków
+select nazwa_przystanku,czas_odjazdu,kierunek as przystanek_końcowy from przystanek_odjazd_tramwaj pot where pot.nr_tramwaju = 1 order by pot.kierunek,pot.czas_odjazdu;
+select nazwa_przystanku,czas_odjazdu,kierunek as przystanek_końcowy from przystanek_odjazd_autobus poa where poa.nr_autobusu = 101 order by poa.kierunek,poa.czas_odjazdu;
