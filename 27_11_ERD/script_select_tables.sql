@@ -9,3 +9,18 @@ WHERE p.ID_osoby = 8;
 SELECT o.* FROM Pokrewieństwo p
 JOIN Osoba o ON p.ID_osoby = o.ID
 WHERE p.ID_rodzica = 8;
+-- informacje o dziadkach danej osoby
+SELECT o.Imię, o.Nazwisko
+FROM Pokrewieństwo p
+JOIN Pokrewieństwo gp ON p.ID_rodzica = gp.ID_osoby
+JOIN Osoba o ON gp.ID_rodzica = o.ID
+WHERE p.ID_osoby = 7;
+-- informacje o rodzeństwie danej osoby
+SELECT o.Imię, o.Nazwisko
+FROM Pokrewieństwo p
+JOIN Osoba o ON p.ID_osoby = o.ID
+WHERE p.ID_rodzica IN (
+    SELECT ID_rodzica
+    FROM Pokrewieństwo
+    WHERE ID_osoby = 7
+) AND p.ID_osoby != 7;
