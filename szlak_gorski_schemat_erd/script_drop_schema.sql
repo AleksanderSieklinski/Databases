@@ -1,0 +1,2 @@
+drop table zadanie6_11_autobusy.autobus, zadanie6_11_autobusy.przystanek, zadanie6_11_autobusy.przystanek_odjazd_autobus, zadanie6_11_autobusy.przystanek_odjazd_tramwaj, zadanie6_11_autobusy.tramwaj;
+drop schema zadanie6_11_autobusy;
