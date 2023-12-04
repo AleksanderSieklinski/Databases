@@ -1,0 +1,1 @@
+DROP SCHEMA IF EXISTS sklep_internetowy CASCADE;
