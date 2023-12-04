@@ -66,3 +66,7 @@ CREATE TABLE ZamowienieProdukt (
     FOREIGN KEY (ZamowienieID) REFERENCES Zamowienie(ZamowienieID),
     FOREIGN KEY (ProduktID) REFERENCES Produkt(ProduktID)
 );
+
+ALTER TABLE Dostawa
+ADD COLUMN KlientID INT,
+ADD FOREIGN KEY (KlientID) REFERENCES Klient(KlientID);
