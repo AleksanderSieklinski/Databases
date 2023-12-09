@@ -1,5 +1,13 @@
 CREATE SCHEMA IF NOT EXISTS "sklep_internetowy";
 set search_path to "sklep_internetowy";
+CREATE SEQUENCE sklep_internetowy.klient_id_seq;
+CREATE SEQUENCE sklep_internetowy.pracownik_id_seq;
+CREATE SEQUENCE sklep_internetowy.departament_id_seq;
+CREATE SEQUENCE sklep_internetowy.produkt_id_seq;
+CREATE SEQUENCE sklep_internetowy.rabat_id_seq;
+CREATE SEQUENCE sklep_internetowy.dostawa_id_seq;
+CREATE SEQUENCE sklep_internetowy.zamowienie_id_seq;
+CREATE SEQUENCE sklep_internetowy.zamowienie_produkt_id_seq;
 CREATE TABLE Klient (
     KlientID INT PRIMARY KEY,
     Imie VARCHAR(100),
