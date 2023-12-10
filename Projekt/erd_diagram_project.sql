@@ -33,7 +33,6 @@ CREATE TABLE Rabat (
 
 CREATE TABLE Dostawa (
     DostawaID INT PRIMARY KEY,
-    Adres_dostawy VARCHAR(255),
     Sposob_dostawy VARCHAR(50),
     Koszt_dostawy DECIMAL(10,2)
 );
@@ -74,7 +73,4 @@ CREATE TABLE ZamowienieProdukt (
     FOREIGN KEY (ZamowienieID) REFERENCES Zamowienie(ZamowienieID),
     FOREIGN KEY (ProduktID) REFERENCES Produkt(ProduktID)
 );
-
-ALTER TABLE Dostawa
-ADD COLUMN KlientID INT,
-ADD FOREIGN KEY (KlientID) REFERENCES Klient(KlientID);
+ALTER TABLE Zamowienie ADD COLUMN Koszt_calkowity DECIMAL(10,2);
