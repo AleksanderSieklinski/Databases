@@ -181,7 +181,7 @@ def main_page():
 
         if not is_admin:
             logout_button = ctk.CTkButton(root, text="Wyloguj się", command=logout)
-            logout_button.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+            logout_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
         else:
             logout_button = ctk.CTkButton(root, text="Wyloguj się", command=logout)
             logout_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
@@ -226,8 +226,37 @@ def orders_page():
     for widget in root.winfo_children():
         widget.destroy()
 
+    width = how_many_columns("Zamowienie") * 250
+    root.geometry(str(width) + "x500")
+    
+    # Connect to the database
+    connection = connect_to_database()
+    cursor = connection.cursor()
+
+    # Execute a query to fetch all orders of the logged in user
+    # Replace 'logged_in_user_id' with the id of the logged in user
+    cursor.execute("SELECT * FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s)", (logged_name, logged_surname))
+    rows = cursor.fetchall()
+
+    # Get column names from cursor description
+    column_names = [description[0] for description in cursor.description]
+
+    # Create a treeview with the results
+    treeview = tk_ttk.Treeview(root, columns=column_names, show='headings')
+
+    # Create the column headers
+    for col_name in column_names:
+        treeview.heading(col_name, text=col_name)
+
+    # Insert the data into the treeview
+    for row in rows:
+        treeview.insert('', 'end', values=row)
+
+    # Pack the treeview to the screen
+    treeview.pack()
+
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
-    back_button.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+    back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)
 
 def new_order_page():
     # Clear the root window
@@ -267,7 +296,7 @@ def new_order_page():
 
     amount_entry = ctk.CTkEntry(root)
     amount_entry.place(relx=0.75, rely=0.4, anchor=ctk.CENTER)
-
+##########################################################
     def add_order_to_db():
         # Connect to your database
         global connection
@@ -336,7 +365,7 @@ def new_order_page():
 
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
     back_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
-
+#############################################################
 def add_department():
     # Clear the root window
     for widget in root.winfo_children():
