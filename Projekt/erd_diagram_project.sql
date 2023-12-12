@@ -119,11 +119,9 @@ BEFORE UPDATE ON sklep_internetowy.Zamowienie
 FOR EACH ROW
 EXECUTE PROCEDURE update_order_status();
 
-CREATE OR REPLACE FUNCTION create_view_for_table(table_name text)
+CREATE OR REPLACE FUNCTION create_view_for_client(client_id INT)
 RETURNS void AS $$
 BEGIN
-    EXECUTE format('CREATE OR REPLACE VIEW view_%s AS SELECT * FROM sklep_internetowy.%I', table_name, table_name);
+    EXECUTE format('CREATE OR REPLACE VIEW view_client_%s AS SELECT z.ZamowienieID, z.data_zlozenia, z.status_zamowienia, z.metoda_platnosci, z.koszt_calkowity, p.nazwa, zp.ilosc FROM sklep_internetowy.Zamowienie z JOIN sklep_internetowy.ZamowienieProdukt zp ON z.ZamowienieID = zp.ZamowienieID JOIN sklep_internetowy.Produkt p ON zp.ProduktID = p.ProduktID WHERE z.KlientID = %s', client_id, client_id);
 END;
 $$ LANGUAGE plpgsql;
-
-SELECT create_view_for_table('Klient');

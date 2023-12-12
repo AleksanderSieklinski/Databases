@@ -21,6 +21,7 @@ is_logged_in = False
 is_admin = False
 logged_name = ""
 logged_surname = ""
+logged_id = 0
 connection = connect_to_database()
 
 def validate_credentials(name, surname):
@@ -29,6 +30,9 @@ def validate_credentials(name, surname):
         global connection
         cursor = connection.cursor()
         postgreSQL_select_Query = "select * from sklep_internetowy.Klient where imie = %s and nazwisko = %s"
+        cursor.execute(postgreSQL_select_Query, (name, surname))
+        global logged_id
+        logged_id = cursor.fetchone()[0]
         cursor.execute(postgreSQL_select_Query, (name, surname))
         user_records = cursor.fetchall()
         connection.commit()
@@ -98,6 +102,8 @@ def logout():
     logged_name = ""
     global logged_surname
     logged_surname = ""
+    global logged_id
+    logged_id = 0
     print("Wylogowano")
     main_page()
 
@@ -240,9 +246,8 @@ def orders_page():
     # Clear the root window
     for widget in root.winfo_children():
         widget.destroy()
-
-    width = how_many_columns("Zamowienie") * 250
-    root.geometry(str(width) + "x500")
+        
+    root.geometry("1500x500")
     
     # Connect to the database
     global connection
@@ -250,7 +255,9 @@ def orders_page():
 
     # Execute a query to fetch all orders of the logged in user
     # Replace 'logged_in_user_id' with the id of the logged in user
-    cursor.execute("SELECT * FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s)", (logged_name, logged_surname))
+    global logged_id
+    cursor.execute("SELECT sklep_internetowy.create_view_for_client(%s)", (logged_id,))
+    cursor.execute("SELECT * FROM view_client_%s", (logged_id,))
     rows = cursor.fetchall()
 
     # Get column names from cursor description
