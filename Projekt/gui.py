@@ -31,11 +31,15 @@ def validate_credentials(name, surname):
         postgreSQL_select_Query = "select * from sklep_internetowy.Klient where imie = %s and nazwisko = %s"
         cursor.execute(postgreSQL_select_Query, (name, surname))
         user_records = cursor.fetchall()
+        connection.commit()
+        cursor.close()
+
         # If no records were found, return False
         if not user_records:
             return False
         # Otherwise, return True
         return True
+
 
     except (Exception, psycopg2.Error) as error :
         print ("Error while fetching data from PostgreSQL", error)
@@ -54,8 +58,10 @@ def login():
             logged_surname = surname_entry.get()
             if name_entry.get() == "admin" and surname_entry.get() == "":
                 is_admin = True
+                print("Zalogowano jako admin")
                 admin_access()
             else:
+                print("Zalogowano")
                 orders_page()
         else:
             print("Nie ma takiego użytkownika")
@@ -92,6 +98,7 @@ def logout():
     logged_name = ""
     global logged_surname
     logged_surname = ""
+    print("Wylogowano")
     main_page()
 
 def register():
@@ -115,6 +122,7 @@ def register():
                 # Commit the changes and close the connection
                 connection.commit()
                 cur.close()
+                print("Zarejestrowano")
                 orders_page()
             except (Exception, psycopg2.DatabaseError) as error:
                 print(error)
@@ -164,6 +172,7 @@ def main_page():
         widget.destroy()
 
     root.title("Sklep internetowy")
+    root.geometry("500x500")
 
     if not is_logged_in:
         login_button = ctk.CTkButton(root, text="Zaloguj się", command=login)
@@ -193,6 +202,9 @@ def main_page():
         show_all_tables_button = ctk.CTkButton(root, text="Podgląd wszystkich tabeli", command=show_all_tables_page)
         show_all_tables_button.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
 
+    exit_button = ctk.CTkButton(root, text="Wyjdź", command=root.destroy)
+    exit_button.place(relx=0.5, rely=0.9, anchor=ctk.CENTER)
+
 def admin_access():
     # Clear the root window
     for widget in root.winfo_children():
@@ -218,8 +230,11 @@ def admin_access():
     refill_product_button = ctk.CTkButton(root, text="Uzupełnij produkt", command=refill_product)
     refill_product_button.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
 
+    delete_order_and_connected_products_button = ctk.CTkButton(root, text="Usuń zamówienie i powiązane produkty", command=delete_order_and_connected_products)
+    delete_order_and_connected_products_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
+
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
-    back_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
+    back_button.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
 
 def orders_page():
     # Clear the root window
@@ -230,7 +245,7 @@ def orders_page():
     root.geometry(str(width) + "x500")
     
     # Connect to the database
-    connection = connect_to_database()
+    global connection
     cursor = connection.cursor()
 
     # Execute a query to fetch all orders of the logged in user
@@ -255,6 +270,9 @@ def orders_page():
     # Pack the treeview to the screen
     treeview.pack()
 
+    connection.commit()
+    cursor.close()
+
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
     back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)
 
@@ -263,11 +281,9 @@ def new_order_page():
     for widget in root.winfo_children():
         widget.destroy()
 
-    # Create entry fields for the product name and the amount to be ordered
+    root.geometry("850x500")
 
-    root.geometry("750x500")
-
-    product_delivery_label = ctk.CTkLabel(root, text="Rodzaj dostawy (kurier, odbiór osobisty, paczkomat)")
+    product_delivery_label = ctk.CTkLabel(root, text="Rodzaj dostawy (kurier, odbiór w punkcie, paczkomat)")
     product_delivery_label.place(relx=0.25, rely=0.1, anchor=ctk.CENTER)
 
     product_delivery_entry = ctk.CTkEntry(root)
@@ -279,85 +295,118 @@ def new_order_page():
     product_method_entry = ctk.CTkEntry(root)
     product_method_entry.place(relx=0.25, rely=0.4, anchor=ctk.CENTER)
 
-    product_discount_label = ctk.CTkLabel(root, text="Rodzaj zniżki (brak, stały klient, pracownik)")
+    product_discount_label = ctk.CTkLabel(root, text="Rodzaj zniżki (brak, stalego klienta, pracownicza, pierwsze zamowienie)")
     product_discount_label.place(relx=0.25, rely=0.5, anchor=ctk.CENTER)
 
     product_discount_entry = ctk.CTkEntry(root)
     product_discount_entry.place(relx=0.25, rely=0.6, anchor=ctk.CENTER)
 
-    product_name_label = ctk.CTkLabel(root, text="Nazwa produktu")
-    product_name_label.place(relx=0.75, rely=0.1, anchor=ctk.CENTER)
+    how_many_types_label = ctk.CTkLabel(root, text="Ile różnych produktów chcesz zamówić?")
+    how_many_types_label.place(relx=0.75, rely=0.1, anchor=ctk.CENTER)
 
-    product_name_entry = ctk.CTkEntry(root)
-    product_name_entry.place(relx=0.75, rely=0.2, anchor=ctk.CENTER)
+    how_many_types_entry = ctk.CTkEntry(root)
+    how_many_types_entry.place(relx=0.75, rely=0.2, anchor=ctk.CENTER)
 
-    amount_label = ctk.CTkLabel(root, text="Ilość")
-    amount_label.place(relx=0.75, rely=0.3, anchor=ctk.CENTER)
-
-    amount_entry = ctk.CTkEntry(root)
-    amount_entry.place(relx=0.75, rely=0.4, anchor=ctk.CENTER)
-##########################################################
     def add_order_to_db():
         # Connect to your database
         global connection
         cur = connection.cursor()
-
-        # Check if the product exists in the database
-        query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
-        cur.execute(query, (product_name_entry.get(),))
+        # Check if there is a free employee
+        query = "SELECT 1 FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie)"
+        cur.execute(query)
         if cur.fetchone() is None:
-            print("The product does not exist.")
+            print("There are no free employees.")
             return
         # Check if the delivery method exists in the database
-        query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE DostawaID = %s"
+        query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s"
         cur.execute(query, (product_delivery_entry.get(),))
         if cur.fetchone() is None:
             print("The delivery method does not exist.")
             return
-
-        # Check if the payment method exists in the database
-        query = "SELECT 1 FROM sklep_internetowy.Rodzaj_platnosci WHERE Rodzaj_platnosciID = %s"
-        cur.execute(query, (product_method_entry.get(),))
-        if cur.fetchone() is None:
-            print("The payment method does not exist.")
+        # Check if payment method is valid
+        methods = ["karta", "przelew", "gotówka"]
+        if product_method_entry.get() not in methods:
+            print("Invalid payment method.")
             return
-
         # Check if the discount exists in the database
-        query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE RabatID = %s"
+        query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s"
         cur.execute(query, (product_discount_entry.get(),))
         if cur.fetchone() is None:
             print("The discount does not exist.")
             return
 
-        # Check if there are enough products in stock
-        query = "SELECT COUNT(*) FROM sklep_internetowy.Produkt WHERE Nazwa = %s AND Dostepnosc >= %s"
-        cur.execute(query, (product_name_entry.get(), amount_entry.get()))
-        if cur.fetchone()[0] == 0:
-            print("There are not enough products in stock.")
-            return
+        # discounted_percent is the percentage of the total cost that will be discounted
+        query = "SELECT Wartosc_znizki FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s"
+        cur.execute(query, (product_discount_entry.get(),))
+        discounted_percent = cur.fetchone()[0]/100
 
-        #Check if there are free employees in the department
-        query = "SELECT COUNT(*) FROM sklep_internetowy.Pracownik WHERE DepartamentID = (SELECT DepartamentID FROM sklep_internetowy.Produkt WHERE Nazwa = %s) AND PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie WHERE Data_zlozenia = CURRENT_DATE)"
-        cur.execute(query, (product_name_entry.get(),))
-        if cur.fetchone()[0] == 0:
-            print("There are no free employees in the department.")
-            return
-
-        # Insert the new order into the database
-        query = "INSERT INTO sklep_internetowy.Zamowienie (ZamowienieID, KlientID, DostawaID, Rodzaj_platnosciID, RabatID) VALUES (nextval('sklep_internetowy.zamowienie_id_seq'), (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s), %s, %s, %s)"
-        cur.execute(query, (logged_name, logged_surname, product_delivery_entry.get(), product_method_entry.get(), product_discount_entry.get()))
-
-        # Insert the ordered product into the database
-        query = "INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES (nextval('sklep_internetowy.zamowienieprodukt_id_seq'), (SELECT ZamowienieID FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s) ORDER BY ZamowienieID DESC LIMIT 1), (SELECT ProduktID FROM sklep_internetowy.Produkt WHERE Nazwa = %s), %s)"
-        cur.execute(query, (logged_name, logged_surname, product_name_entry.get(), amount_entry.get()))
-
-        # Update the dostepnosc column for the specified product
-        query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc - %s WHERE Nazwa = %s"
-        cur.execute(query, (amount_entry.get(), product_name_entry.get()))
-
-        # Commit the changes and close the connection
+        # Insert the new order into the database, cena_calkowita is set to koszt_dostawy and rabat is a divider for the total cost
+        query = "INSERT INTO sklep_internetowy.Zamowienie (ZamowienieID, KlientID, PracownikID, DostawaID, Metoda_platnosci, RabatID, Data_zlozenia, Status_zamowienia, Koszt_calkowity) VALUES (nextval('sklep_internetowy.zamowienie_id_seq'), (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s), (SELECT PracownikID FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie) LIMIT 1), (SELECT DostawaID FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s), %s, (SELECT RabatID FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s), current_date, 'brak produktów', (SELECT Koszt_dostawy FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s) * (1 - %s))"
+        cur.execute(query, (logged_name, logged_surname, product_delivery_entry.get(), product_method_entry.get(), product_discount_entry.get(), product_delivery_entry.get(), discounted_percent))
+        # Create a zamowienieid var
+        query = "SELECT ZamowienieID FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s) ORDER BY ZamowienieID DESC LIMIT 1"
+        cur.execute(query, (logged_name, logged_surname))
+        zamowienieid = cur.fetchone()[0]
         connection.commit()
         cur.close()
+
+        ##########################################################
+
+        def open_window(i=0):
+            if i < int(how_many_types_entry.get()):
+                # Create a popup window
+                popup = tk.Toplevel()
+                popup.wm_title("Dodaj produkt")
+                popup.geometry("300x300")
+
+                # Create entry fields for the product name and the amount to be ordered
+                product_name_label = ctk.CTkLabel(popup, text="Nazwa produktu")
+                product_name_label.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
+
+                product_name_entry = ctk.CTkEntry(popup)
+                product_name_entry.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+
+                amount_label = ctk.CTkLabel(popup, text="Ilość")
+                amount_label.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
+
+                amount_entry = ctk.CTkEntry(popup)
+                amount_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+
+                def add_product_to_db():
+                    # Check if the product exists in the database
+                    global connection
+                    cur = connection.cursor()
+                    connection.commit()
+                    query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+                    cur.execute(query, (product_name_entry.get(),))
+                    if cur.fetchone() is None:
+                        print("The product does not exist.")
+                        return
+                    # Check if the product is available in the requested amount
+                    query = "SELECT dostepnosc FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+                    cur.execute(query, (product_name_entry.get(),))
+                    if cur.fetchone()[0] < int(amount_entry.get()):
+                        print("The requested amount is not available.")
+                        return
+                    # Insert the new product into the database for the specified order ID, trigger will update the total cost of the order
+                    query = "INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES (nextval('sklep_internetowy.zamowienie_produkt_id_seq'), %s, (SELECT ProduktID FROM sklep_internetowy.Produkt WHERE Nazwa = %s), %s)"
+                    cur.execute(query, (zamowienieid, product_name_entry.get(), int(amount_entry.get())))
+                    # Update the dostepnosc column for the specified product
+                    query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc - %s WHERE Nazwa = %s"
+                    cur.execute(query, (int(amount_entry.get()), product_name_entry.get()))
+                    # Commit the changes and close the connection
+                    print("Zamowienie dodane")
+                    connection.commit()
+                    cur.close()
+                    popup.destroy()
+
+                # Create a button that adds the product to the database when clicked
+                add_button = ctk.CTkButton(popup, text="Dodaj", command=lambda:[add_product_to_db(), open_window(i+1)])
+                add_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+
+        open_window()
+        print("Zamowienie dodane")
+        #############################################################
 
     # Create a button that adds the new order to the database when clicked
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_order_to_db)
@@ -365,7 +414,47 @@ def new_order_page():
 
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
     back_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
-#############################################################
+
+def delete_order_and_connected_products():
+    # Clear the root window
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    # Create input fields for the order ID
+    order_id_label = ctk.CTkLabel(root, text="ID zamówienia")
+    order_id_label.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
+
+    order_id_entry = ctk.CTkEntry(root)
+    order_id_entry.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+
+    def delete_order_and_connected_products_from_db():
+        # Connect to your database
+        global connection
+        cur = connection.cursor()
+
+        # Check if the order ID exists in the database
+        query = "SELECT 1 FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s"
+        cur.execute(query, (order_id_entry.get(),))
+        if cur.fetchone() is None:
+            print("The order ID does not exist.")
+            return
+
+        # Delete the order and the connected products from the database, trigger will delete the products from ZamowienieProdukt
+        cur.execute("DELETE FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s", (order_id_entry.get(),))
+
+        # Commit the changes and close the connection
+        connection.commit()
+        cur.close()
+        print("Zamowienie usunięte")
+
+
+    # Create a button that deletes the order and the connected products from the database when clicked
+    delete_button = ctk.CTkButton(root, text="Usuń", command=delete_order_and_connected_products_from_db)
+    delete_button.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
+
+    back_button = ctk.CTkButton(root, text="Wróć", command=admin_access)
+    back_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+
 def add_department():
     # Clear the root window
     for widget in root.winfo_children():
@@ -397,6 +486,8 @@ def add_department():
         # Commit the changes and close the connection
         connection.commit()
         cur.close()
+        print("Departament dodany")
+
 
     # Create a button that adds the new department to the database when clicked
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_department_to_db)
@@ -442,6 +533,8 @@ def add_delivery():
         # Commit the changes and close the connection
         connection.commit()
         cur.close()
+        print("Dostawa dodana")
+
 
     # Create a button that adds the new delivery method to the database when clicked
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_delivery_to_db)
@@ -493,6 +586,8 @@ def add_employee():
         # Commit the changes and close the connection
         connection.commit()
         cur.close()
+        print("Pracownik dodany")
+
 
     # Create a button that adds the new employee to the database when clicked
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_employee_to_db)
@@ -543,6 +638,8 @@ def add_product():
         # Commit the changes and close the connection
         connection.commit()
         cur.close()
+        print("Produkt dodany")
+
 
 
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_product_to_db)
@@ -582,6 +679,8 @@ def add_discount():
         # Commit the changes and close the connection
         connection.commit()
         cur.close()
+        print("Zniżka dodana")
+
 
     add_discount_button = ctk.CTkButton(root, text="Dodaj", command=add_discount_to_db)
     add_discount_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
@@ -631,6 +730,8 @@ def refill_product():
         # Commit the changes and close the cursor
         connection.commit()
         cur.close()
+        print("Produkt uzupełniony")
+
 
     refill_button = ctk.CTkButton(root, text="Uzupełnij", command=refill_product_in_db)
     refill_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
@@ -674,15 +775,17 @@ def show_all_tables_page():
     back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)
 
 def how_many_columns(table_name):
-    connection = connect_to_database()
+    global connection
     cursor = connection.cursor()
     # first get names of columns
     cursor.execute("SELECT * FROM sklep_internetowy.{0} LIMIT 0".format(table_name))
     colnames = [desc[0] for desc in cursor.description]
+    connection.commit()
+    cursor.close()
     return len(colnames)
 
 def show_all_records(table_name):
-    connection = connect_to_database()
+    global connection
     cursor = connection.cursor()
     # first get names of columns
     cursor.execute("SELECT * FROM sklep_internetowy.{0} LIMIT 0".format(table_name))
@@ -703,6 +806,8 @@ def show_all_records(table_name):
     tree.insert("", "end", values=colnames)
     for record in records:
         tree.insert("", "end", values=record)
+    connection.commit()
+    cursor.close()
 
 def show_table(table_name):
     for widget in root.winfo_children():
@@ -718,11 +823,8 @@ def show_table(table_name):
 def main():
    # Create the root window
     main_page()
-    root.update_idletasks()
-    root.geometry("500x500")
-
     root.mainloop()
-    anext = connection.close()
+    anext=connection.close()
 
 if __name__ == "__main__":
     main()
