@@ -1,6 +1,5 @@
     SET SEARCH_PATH TO sklep_internetowy;
 
-    -- Insert into Klient table
     INSERT INTO Klient (KlientID, Imie, Nazwisko, Adres, Email, Numer_telefonu)
     VALUES
     (nextval('klient_id_seq'), 'Jan', 'Kowalski', 'ul. Kowalskiego 1, 00-000 Warszawa', 'jankowalski@gmail.com', '222222222'),
@@ -9,7 +8,6 @@
     (nextval('klient_id_seq'), 'Anna', 'Kowalska', 'ul. Kowalska 1, 00-000 Warszawa', 'annakowalska@gmail.com', '555555555'),
     (nextval('klient_id_seq'), 'admin', '', 'ul. Admina 1, 00-000 Warszawa', 'admin@gmail.com', '111111111');
 
-    -- Insert into Produkt table
     INSERT INTO Produkt (ProduktID, Nazwa, Cena, Dostepnosc, Opis)
     VALUES
     (nextval('produkt_id_seq'), 'Kosiarka', 100.00, 10, 'Świeżo skoszony trawnik to wizytówka każdego domu.'),
@@ -37,7 +35,6 @@
     (nextval('produkt_id_seq'), 'Myszka', 2300.00, 230, 'Myszka do pracy.'),
     (nextval('produkt_id_seq'), 'Słuchawki', 2400.00, 240, 'Słuchawki do słuchania muzyki.');
 
-    -- Insert into Rabat table
     INSERT INTO Rabat (RabatID, Rodzaj_znizki, Wartosc_znizki)
     VALUES
     (nextval('rabat_id_seq'), 'brak', 0.00),
@@ -45,20 +42,17 @@
     (nextval('rabat_id_seq'), 'pracownicza', 40.00),
     (nextval('rabat_id_seq'), 'pierwsze zamowienie', 10.00);
 
-    -- Insert into Dostawa table
     INSERT INTO Dostawa (DostawaID, Sposob_dostawy, Koszt_dostawy)
     VALUES
     (nextval('dostawa_id_seq'), 'paczkomat', 10.00),
     (nextval('dostawa_id_seq'), 'kurier', 20.00),
     (nextval('dostawa_id_seq'), 'odbior osobisty', 0.00);
 
-    -- Insert into Departament table
     INSERT INTO Departament (DepartamentID, Nazwa_departamentu)
     VALUES
     (nextval('departament_id_seq'), 'Departament 1'),
     (nextval('departament_id_seq'), 'Departament 2');
 
-    -- Insert into Pracownik table
     INSERT INTO Pracownik (PracownikID, Imie, Nazwisko, DepartamentID)
     VALUES
     (nextval('pracownik_id_seq'), 'Adrian', 'Abacki', 1),
@@ -86,13 +80,11 @@
     (nextval('pracownik_id_seq'), 'Yan', 'Ybacki', 1),
     (nextval('pracownik_id_seq'), 'Zbigniew', 'Zbacki', 2);
 
-    -- Insert into Zamowienie table
     INSERT INTO Zamowienie (ZamowienieID, Data_zlozenia, Status_zamowienia, Metoda_platnosci, KlientID, RabatID, DostawaID, PracownikID, Koszt_calkowity)
     VALUES
     (nextval('zamowienie_id_seq'), '2022-01-01', 'Zlozone', 'Karta', 1, 1, 1, 1, 100.00),
     (nextval('zamowienie_id_seq'), '2022-01-02', 'Zlozone', 'Gotowka', 2, 2, 2, 2, 200.00);
 
-    -- Insert into ZamowienieProdukt table
     INSERT INTO ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc)
     VALUES
     (nextval('zamowienie_produkt_id_seq'), 1, 1, 1),
