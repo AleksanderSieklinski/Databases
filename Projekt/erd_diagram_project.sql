@@ -102,22 +102,23 @@ CREATE TRIGGER update_total_cost
                         FOR EACH ROW
                         EXECUTE PROCEDURE update_total_cost();
 
-CREATE OR REPLACE FUNCTION update_order_status()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_all_order_status() RETURNS VOID AS $$
+DECLARE
+    rec RECORD;
 BEGIN
-    IF (NEW.data_zlozenia::date - current_date) = 1 THEN
-        NEW.status_zamowienia := 'wysłano';
-    ELSIF (NEW.data_zlozenia::date - current_date) > 1 THEN
-        NEW.status_zamowienia := 'dostarczono';
-    END IF;
-    RETURN NEW;
+    FOR rec IN SELECT * FROM sklep_internetowy.Zamowienie
+    LOOP
+        IF (current_date - rec.Data_zlozenia) = 1 THEN
+            UPDATE sklep_internetowy.Zamowienie SET Status_zamowienia = 'wysłano' WHERE ZamowienieID = rec.ZamowienieID;
+        ELSIF (current_date - rec.Data_zlozenia) > 1 THEN
+            UPDATE sklep_internetowy.Zamowienie SET Status_zamowienia = 'dostarczono' WHERE ZamowienieID = rec.ZamowienieID;
+        ELSE
+            UPDATE sklep_internetowy.Zamowienie SET Status_zamowienia = 'Złożone' WHERE ZamowienieID = rec.ZamowienieID;
+        END IF;
+    END LOOP;
+    RETURN;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_order_status
-BEFORE UPDATE ON sklep_internetowy.Zamowienie
-FOR EACH ROW
-EXECUTE PROCEDURE update_order_status();
 
 CREATE OR REPLACE FUNCTION create_view_for_client(client_id INT)
 RETURNS void AS $$
@@ -125,3 +126,5 @@ BEGIN
     EXECUTE format('CREATE OR REPLACE VIEW view_client_%s AS SELECT z.ZamowienieID, z.data_zlozenia, z.status_zamowienia, z.metoda_platnosci, z.koszt_calkowity, p.nazwa, zp.ilosc FROM sklep_internetowy.Zamowienie z JOIN sklep_internetowy.ZamowienieProdukt zp ON z.ZamowienieID = zp.ZamowienieID JOIN sklep_internetowy.Produkt p ON zp.ProduktID = p.ProduktID WHERE z.KlientID = %s', client_id, client_id);
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE VIEW view_products AS SELECT p.Nazwa, p.Cena, p.Dostepnosc, p.Opis FROM sklep_internetowy.Produkt p;
