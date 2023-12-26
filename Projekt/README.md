@@ -2,13 +2,13 @@
 
 ## Wprowadzanie danych
 
-Sklep od początku zawiera rozbudowany asortyment: kilkudziesięciu pracowników, kilka kategorii produktów, departamentów, wielu klientów, różne rabaty oraz sposoby dostawy i płatności. Wszystkie dane są wprowadzane przez administratora sklepu w specjalnej konsoli. Aby zalogować się jako administrator należy wpisać login: `admin` oraz puste hasło. W konsoli administratora można dodawać, usuwać i modyfikować wszystkie dane. Ma on również możliwość wyświetlenia wszystkich danych w bazie, w przeciwności do użytkownika, który może tylko przeglądać ofertę sklepu, dodawać produkty do koszyka, składać zamówienia oraz sprawdzać status zamówień oglądając tylko część informacji o swoich zamówionych produktach.
+Sklep od początku zawiera rozbudowany asortyment: kilkudziesięciu pracowników, kilka kategorii produktów, departamentów, wielu klientów, różne rabaty oraz sposoby dostawy i płatności. Wszystkie dane są wprowadzane przez administratora sklepu w specjalnej konsoli. Aby zalogować się jako administrator należy wpisać login: `admin` oraz puste hasło. W konsoli administratora można dodawać, usuwać i modyfikować wszystkie dane. Ma on również możliwość wyświetlenia wszystkich danych w bazie, w przeciwności do użytkownika, który może tylko przeglądać ofertę sklepu, dodawać produkty do koszyka, składać zamówienia oraz sprawdzać status zamówień oglądając tylko część informacji o swoich zamówionych produktach. Struktura bazy danych została przedstawiona na diagramie ERD załączonym do projektu. Dokładny proces tworzenia tabeli oraz wstępne uzupełnienie ich o dane można zobaczyć w plikach `erd_diagram_project.sql` oraz `erd_fill_tables.sql`.
 
 ## Dokumentacja użytkownika
 
 ### Instalacja
 
-Aby aplikacja działała poprawnie, należy zainstalować bazę danych PostgreSQL oraz zainstalować odpowiednie biblioteki do połączenia z bazą danych. W pliku `requirements.txt` znajdują się wszystkie potrzebne biblioteki. Aby je zainstalować należy wpisać w konsoli: `pip install -r requirements.txt`. Po uruchomieniu aplikacji, sama połączy się z bazą danych.
+Aby aplikacja działała poprawnie, należy zainstalować bazę danych PostgreSQL oraz zainstalować odpowiednie biblioteki do połączenia z bazą danych. W pliku `requirements.txt` znajdują się wszystkie potrzebne biblioteki. Aby je zainstalować należy wpisać w konsoli: `pip install -r requirements.txt`. Po uruchomieniu aplikacji `gui.py`, sama połączy się z bazą danych.
 
 ### Interfejs użytkownika
 
