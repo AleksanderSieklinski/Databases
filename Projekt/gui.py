@@ -13,7 +13,7 @@ def connect_to_database():
         )
         return connection
     except (Exception, psycopg2.Error) as error :
-        print ("Error while fetching data from PostgreSQL", error)
+        print ("Błąd podczas łączenia z bazą danych", error)
         return None
 
 root = ctk.CTk()
@@ -414,12 +414,12 @@ def new_order_page():
                     query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
                     cur.execute(query, (product_name_entry.get(),))
                     if cur.fetchone() is None:
-                        print("The product does not exist.")
+                        print("Produkt nie istnieje")
                         return
                     query = "SELECT dostepnosc FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
                     cur.execute(query, (product_name_entry.get(),))
                     if cur.fetchone()[0] < int(amount_entry.get()):
-                        print("The requested amount is not available.")
+                        print("Nie ma tyle produktów na stanie")
                         return
                     query = '''INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES 
                     (nextval('sklep_internetowy.zamowienie_produkt_id_seq'), 
@@ -486,7 +486,7 @@ def delete_order_and_connected_products():
         query = "SELECT 1 FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s"
         cur.execute(query, (order_id_entry.get(),))
         if cur.fetchone() is None:
-            print("The order ID does not exist.")
+            print("To zamówienie nie istnieje")
             return
 
         cur.execute("DELETE FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s", (order_id_entry.get(),))
@@ -518,7 +518,7 @@ def add_department():
         query = "SELECT 1 FROM sklep_internetowy.Departament WHERE Nazwa_departamentu = %s"
         cur.execute(query, (department_name_entry.get(),))
         if cur.fetchone() is not None:
-            print("The department already exists.")
+            print("Departament już istnieje.")
             return
 
         query = "INSERT INTO sklep_internetowy.Departament (DepartamentID, Nazwa_departamentu) VALUES (nextval('sklep_internetowy.departament_id_seq'), %s)"
@@ -557,7 +557,7 @@ def add_category():
         query = "SELECT 1 FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s"
         cur.execute(query, (category_name_entry.get(),))
         if cur.fetchone() is not None:
-            print("The category already exists.")
+            print("Kategoria już istnieje.")
             return
 
         query = '''INSERT INTO sklep_internetowy.RodzajProduktu (RodzajProduktuID, Nazwa, DepartamentID) VALUES 
@@ -600,7 +600,7 @@ def add_delivery():
         query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE Sposob_dostawy = %s"
         cur.execute(query, (delivery_method_entry.get(),))
         if cur.fetchone() is not None:
-            print("The delivery method already exists.")
+            print("Dostawa już istnieje.")
             return
 
         query = "INSERT INTO sklep_internetowy.Dostawa (DostawaID, Sposob_dostawy, Koszt_dostawy) VALUES (nextval('sklep_internetowy.dostawa_id_seq'), %s, %s)"
@@ -644,7 +644,7 @@ def add_employee():
 
         cur.execute("SELECT 1 FROM sklep_internetowy.Departament WHERE DepartamentID = %s", (department_id_entry.get(),))
         if cur.fetchone() is None:
-            print("The department ID does not exist.")
+            print("Nie ma takiego departamentu")
             return
 
         query = "INSERT INTO sklep_internetowy.Pracownik (PracownikID, Imie, Nazwisko, DepartamentID) VALUES (nextval('sklep_internetowy.pracownik_id_seq'), %s, %s, %s)"
@@ -722,6 +722,12 @@ def add_product():
         global connection
         cur = connection.cursor()
 
+        query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+        cur.execute(query, (nazwa_entry.get(),))
+        if cur.fetchone() is not None:
+            print("Produkt już istnieje.")
+            return
+
         query = "INSERT INTO sklep_internetowy.Produkt (ProduktID, Nazwa, Cena, Dostepnosc, Opis, RodzajProduktuID) VALUES (nextval('sklep_internetowy.produkt_id_seq'), %s, %s, %s, %s, (SELECT RodzajProduktuID FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s))"
         cur.execute(query, (nazwa_entry.get(), float(cena_entry.get()), int(dostepnosc_entry.get()), opis_entry.get(), category_entry.get()))
 
@@ -756,6 +762,12 @@ def add_discount():
     def add_discount_to_db():
         global connection
         cur = connection.cursor()
+
+        query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE Rodzaj_znizki = %s"
+        cur.execute(query, (rodzaj_znizki_entry.get(),))
+        if cur.fetchone() is not None:
+            print("Zniżka już istnieje.")
+            return
 
         query = "INSERT INTO sklep_internetowy.Rabat (RabatID, Rodzaj_znizki, Wartosc_znizki) VALUES (nextval('sklep_internetowy.rabat_id_seq'), %s, %s)"
         cur.execute(query, (rodzaj_znizki_entry.get(), float(wartosc_znizki_entry.get())))
@@ -792,13 +804,13 @@ def refill_product():
         cur = connection.cursor()
 
         if int(amount_entry.get()) < 0:
-            print("The amount must be a positive integer.")
+            print("Nie można uzupełnić produktu o ujemną ilość")
             return
 
         query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
         cur.execute(query, (product_name_entry.get(),))
         if cur.fetchone() is None:
-            print("The product does not exist.")
+            print("Produkt nie istnieje")
             return
 
         query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc + %s WHERE Nazwa = %s"
