@@ -28,9 +28,13 @@ Aplikacja składa się z dwóch głównych części: interfejsu graficznego oraz
 
 W aplikacji znajdują się dwie stałe: `User` oraz `Admin`. Stała `User` odpowiada za użytkownika, który może przeglądać ofertę sklepu, dodawać produkty do koszyka, składać zamówienia oraz sprawdzać status zamówień oglądając tylko część informacji o swoich zamówionych produktach. Stała `Admin` odpowiada za administratora, który może dodawać, usuwać i modyfikować wszystkie dane w bazie. Ma on również możliwość wyświetlenia wszystkich danych w bazie, w przeciwności do użytkownika.
 
-### Opisy funkcji i metod
+### Opisy funkcji bazodanowych
 
-Podczas składania zamówień jak i ich usuwania wywoływane są wyzwalacze które pozwalają na automatyczną zmianę tablic powiązanych z zamówieniem. Gdy usuwamy zamówienie o id równym 1, usunięte zostaną również wszystkie rekordy zamowienieprodukt powiązane z tym zamówieniem. Gdy składamy zamówienie, wywoływany jest wyzwalacz, który zmienia status zamówienia na `Złożono`. Następnie, po upływie jednego dnia, wywoływany jest wyzwalacz, który zmienia status zamówienia na `Wysłano`. Po upływie dwóch dni, wywoływany jest wyzwalacz, który zmienia status zamówienia na `Dostarczono`. Dla użytkownika z określonym id automatycznie tworzony jest widok, który zawiera informacje o jego zamówieniach. W widoku tym znajdują się informacje o zamówieniu, produkcie, cenie, ilości, sposobie dostawy, rabacie i płatności.
+Podczas składania zamówień jak i ich usuwania wywoływane są wyzwalacze które pozwalają na automatyczną zmianę tablic powiązanych z zamówieniem. Gdy usuwamy zamówienie o id równym 1, usunięte zostaną również wszystkie rekordy zamowienieprodukt powiązane z tym zamówieniem. Gdy składamy zamówienie, wywoływany jest wyzwalacz, który zmienia status zamówienia na `Złożono`. Następnie, po upływie jednego dnia, wywoływany jest wyzwalacz, który zmienia status zamówienia na `Wysłano`. Po upływie dwóch dni, wywoływany jest wyzwalacz, który zmienia status zamówienia na `Dostarczono`. Dla użytkownika z określonym id automatycznie tworzony jest widok, który zawiera informacje o jego zamówieniach. W widoku tym znajdują się informacje o zamówieniu, produkcie, cenie, ilości, sposobie dostawy, rabacie i płatności. 
+
+### Opisy funkcji programu
+
+W aplikacji znajdują się dwie funkcje: `login` oraz `register`. Funkcja `login` odpowiada za logowanie użytkownika do aplikacji. Funkcja `register` odpowiada za rejestrację użytkownika w aplikacji. Przeglądanie tabeli przez admina jest realizowane przez funkcję `show_all_records`. Dodawanie rekordów do tabeli przez admina jest realizowane przez odpowiadające tabelom funkcje, posiadające mechanizmy uniemożliwiające niepoprawne wstawianie danych bądź ich duplikację. Usuwanie danych z tabeli zamówień jest realizowane przez funkcję `delete_order_and_connected_products`. Usuwa ona zamowienie przez jego numer id. Funkcja `add_order_to_db` realizuje dodawanie zamowienia do bazy danych, również sprawdzając poprawność wprowadzanych danych. Reszta funkcji odpowiada za wyświetlanie określonych okien aplikacji oraz obsługę przycisków wywołujących odpowiednie funkcje.
 
 ## Żródła
 
