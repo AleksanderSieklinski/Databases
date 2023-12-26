@@ -213,32 +213,35 @@ def admin_access():
     add_department_button = ctk.CTkButton(root, text="Dodaj nowy departament", command=add_department)
     add_department_button.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
 
+    add_category_button = ctk.CTkButton(root, text="Dodaj nową kategorię produktu", command=add_category)
+    add_category_button.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+
     add_employee_button = ctk.CTkButton(root, text="Dodaj pracownika", command=add_employee)
-    add_employee_button.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+    add_employee_button.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
 
     add_product_button = ctk.CTkButton(root, text="Dodaj nowy produkt", command=add_product)
-    add_product_button.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
+    add_product_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
     add_discount_button = ctk.CTkButton(root, text="Dodaj nową zniżkę", command=add_discount)
-    add_discount_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+    add_discount_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
 
     add_delivery_button = ctk.CTkButton(root, text="Dodaj nową dostawę", command=add_delivery)
-    add_delivery_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+    add_delivery_button.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
 
     refill_product_button = ctk.CTkButton(root, text="Uzupełnij produkt", command=refill_product)
-    refill_product_button.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
+    refill_product_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
 
     delete_order_and_connected_products_button = ctk.CTkButton(root, text="Usuń zamówienie i powiązane produkty", command=delete_order_and_connected_products)
-    delete_order_and_connected_products_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
+    delete_order_and_connected_products_button.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
 
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
-    back_button.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
+    back_button.place(relx=0.5, rely=0.9, anchor=ctk.CENTER)
 
 def orders_page():
     for widget in root.winfo_children():
         widget.destroy()
         
-    root.geometry("1500x500")
+    root.geometry("1600x500")
     
     global connection
     cursor = connection.cursor()
@@ -362,8 +365,19 @@ def new_order_page():
         cur.execute(query, (product_discount_entry.get(),))
         discounted_percent = cur.fetchone()[0]/100
 
-        query = "INSERT INTO sklep_internetowy.Zamowienie (ZamowienieID, KlientID, PracownikID, DostawaID, Metoda_platnosci, RabatID, Data_zlozenia, Status_zamowienia, Koszt_calkowity) VALUES (nextval('sklep_internetowy.zamowienie_id_seq'), (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s), (SELECT PracownikID FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie) LIMIT 1), (SELECT DostawaID FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s), %s, (SELECT RabatID FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s), current_date, 'brak produktów', (SELECT Koszt_dostawy FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s) * (1 - %s))"
-        cur.execute(query, (logged_name, logged_surname, product_delivery_entry.get(), payment_method_entry.get(), product_discount_entry.get(), product_delivery_entry.get(), discounted_percent))
+        query = '''INSERT INTO sklep_internetowy.Zamowienie (ZamowienieID, Data_zlozenia, Status_zamowienia, Metoda_platnosci, KlientID, RabatID, DostawaID, PracownikID, Koszt_calkowity)
+        VALUES 
+        (nextval('sklep_internetowy.zamowienie_id_seq'), 
+        current_date, 
+        'brak produktów', 
+        %s,
+        (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s),
+        (SELECT RabatID FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s),
+        (SELECT DostawaID FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s),
+        (SELECT PracownikID FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie) LIMIT 1),
+        %s)
+        '''
+        cur.execute(query, (payment_method_entry.get(), logged_name, logged_surname, product_discount_entry.get(), product_delivery_entry.get(), 0))
 
         query = "SELECT ZamowienieID FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s) ORDER BY ZamowienieID DESC LIMIT 1"
         cur.execute(query, (logged_name, logged_surname))
@@ -407,7 +421,10 @@ def new_order_page():
                     if cur.fetchone()[0] < int(amount_entry.get()):
                         print("The requested amount is not available.")
                         return
-                    query = "INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES (nextval('sklep_internetowy.zamowienie_produkt_id_seq'), %s, (SELECT ProduktID FROM sklep_internetowy.Produkt WHERE Nazwa = %s), %s)"
+                    query = '''INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES 
+                    (nextval('sklep_internetowy.zamowienie_produkt_id_seq'), 
+                    %s, 
+                    (SELECT ProduktID FROM sklep_internetowy.Produkt WHERE Nazwa = %s), %s)'''
                     cur.execute(query, (zamowienieid, product_name_entry.get(), int(amount_entry.get())))
                     query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc - %s WHERE Nazwa = %s"
                     cur.execute(query, (int(amount_entry.get()), product_name_entry.get()))
@@ -431,6 +448,30 @@ def new_order_page():
 def delete_order_and_connected_products():
     for widget in root.winfo_children():
         widget.destroy()
+
+    popup = tk.Toplevel()
+    popup.wm_title("Dostępne zamówienia")
+
+    global connection
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM sklep_internetowy.Zamowienie")
+    rows = cursor.fetchall()
+
+    column_names = [description[0] for description in cursor.description]
+    
+    treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
+
+    for col_name in column_names:
+        treeview.heading(col_name, text=col_name)
+
+    for row in rows:
+        treeview.insert('', 'end', values=row)
+
+    treeview.pack()
+
+    connection.commit()
+    cursor.close()
 
     order_id_label = ctk.CTkLabel(root, text="ID zamówienia")
     order_id_label.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
@@ -492,6 +533,49 @@ def add_department():
 
     back_button = ctk.CTkButton(root, text="Wróć", command=admin_access)
     back_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+
+def add_category():
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    category_name_label = ctk.CTkLabel(root, text="Nazwa kategorii")
+    category_name_label.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
+
+    category_name_entry = ctk.CTkEntry(root)
+    category_name_entry.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+
+    department_name_label = ctk.CTkLabel(root, text="Nazwa departamentu odpowiadającego kategorii")
+    department_name_label.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
+
+    department_name_entry = ctk.CTkEntry(root)
+    department_name_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+
+    def add_category_to_db():
+        global connection
+        cur = connection.cursor()
+
+        query = "SELECT 1 FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s"
+        cur.execute(query, (category_name_entry.get(),))
+        if cur.fetchone() is not None:
+            print("The category already exists.")
+            return
+
+        query = '''INSERT INTO sklep_internetowy.RodzajProduktu (RodzajProduktuID, Nazwa, DepartamentID) VALUES 
+        (nextval('sklep_internetowy.rodzaj_produktu_id_seq'), 
+        %s, 
+        (SELECT DepartamentID FROM sklep_internetowy.Departament WHERE Nazwa_departamentu = %s))
+        '''
+        cur.execute(query, (category_name_entry.get(), department_name_entry.get()))
+
+        connection.commit()
+        cur.close()
+        print("Kategoria dodana")
+
+    add_button = ctk.CTkButton(root, text="Dodaj", command=add_category_to_db)
+    add_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+
+    back_button = ctk.CTkButton(root, text="Wróć", command=admin_access)
+    back_button.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
 
 def add_delivery():
     for widget in root.winfo_children():
@@ -580,6 +664,30 @@ def add_product():
     for widget in root.winfo_children():
         widget.destroy()
 
+    popup = tk.Toplevel()
+    popup.wm_title("Dostępne kategorie")
+
+    global connection
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT Nazwa FROM sklep_internetowy.RodzajProduktu")
+    rows = cursor.fetchall()
+
+    column_names = [description[0] for description in cursor.description]
+
+    treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
+
+    for col_name in column_names:
+        treeview.heading(col_name, text=col_name)
+
+    for row in rows:
+        treeview.insert('', 'end', values=row)
+
+    treeview.pack()
+
+    connection.commit()
+    cursor.close()
+
     nazwa_label = ctk.CTkLabel(root, text="Nazwa")
     nazwa_label.place(relx=0.5, rely=0.08, anchor=ctk.CENTER)
 
@@ -604,12 +712,18 @@ def add_product():
     opis_entry = ctk.CTkEntry(root)
     opis_entry.place(relx=0.5, rely=0.64, anchor=ctk.CENTER)
 
+    category_label = ctk.CTkLabel(root, text="Nazwa kategorii")
+    category_label.place(relx=0.5, rely=0.72, anchor=ctk.CENTER)
+
+    category_entry = ctk.CTkEntry(root)
+    category_entry.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
+
     def add_product_to_db():
         global connection
         cur = connection.cursor()
 
-        query = "INSERT INTO sklep_internetowy.Produkt (ProduktID, Nazwa, Cena, Dostepnosc, Opis) VALUES (nextval('sklep_internetowy.produkt_id_seq'), %s, %s, %s, %s)"
-        cur.execute(query, (nazwa_entry.get(), float(cena_entry.get()), int(dostepnosc_entry.get()), opis_entry.get()))
+        query = "INSERT INTO sklep_internetowy.Produkt (ProduktID, Nazwa, Cena, Dostepnosc, Opis, RodzajProduktuID) VALUES (nextval('sklep_internetowy.produkt_id_seq'), %s, %s, %s, %s, (SELECT RodzajProduktuID FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s))"
+        cur.execute(query, (nazwa_entry.get(), float(cena_entry.get()), int(dostepnosc_entry.get()), opis_entry.get(), category_entry.get()))
 
         connection.commit()
         cur.close()
@@ -618,10 +732,10 @@ def add_product():
 
 
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_product_to_db)
-    add_button.place(relx=0.5, rely=0.74, anchor=ctk.CENTER)
+    add_button.place(relx=0.5, rely=0.88, anchor=ctk.CENTER)
 
     back_button = ctk.CTkButton(root, text="Wróć", command=admin_access)
-    back_button.place(relx=0.5, rely=0.84, anchor=ctk.CENTER)
+    back_button.place(relx=0.5, rely=0.96, anchor=ctk.CENTER)
 
 def add_discount():
     for widget in root.winfo_children():
@@ -710,26 +824,29 @@ def show_all_tables_page():
     show_departments_button = ctk.CTkButton(root, text="Departamenty", command=lambda: show_table("Departament"))
     show_departments_button.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
 
+    show_categories_button = ctk.CTkButton(root, text="Kategorie", command=lambda: show_table("RodzajProduktu"))
+    show_categories_button.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+
     show_employees_button = ctk.CTkButton(root, text="Pracownicy", command=lambda: show_table("Pracownik"))
-    show_employees_button.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
+    show_employees_button.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
 
     show_products_button = ctk.CTkButton(root, text="Produkty", command=lambda: show_table("Produkt"))
-    show_products_button.place(relx=0.5, rely=0.3, anchor=ctk.CENTER)
+    show_products_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
     show_discounts_button = ctk.CTkButton(root, text="Zniżki", command=lambda: show_table("Rabat"))
-    show_discounts_button.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
+    show_discounts_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
 
     show_orders_button = ctk.CTkButton(root, text="Zamówienia", command=lambda: show_table("Zamowienie"))
-    show_orders_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
+    show_orders_button.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
 
     show_ordered_items_button = ctk.CTkButton(root, text="Produkty w zamówieniach", command=lambda: show_table("zamowienieprodukt"))
-    show_ordered_items_button.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
+    show_ordered_items_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
 
     show_customers_button = ctk.CTkButton(root, text="Klienci", command=lambda: show_table("Klient"))
-    show_customers_button.place(relx=0.5, rely=0.7, anchor=ctk.CENTER)
+    show_customers_button.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
 
     show_deliveries_button = ctk.CTkButton(root, text="Dostawy", command=lambda: show_table("Dostawa"))
-    show_deliveries_button.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
+    show_deliveries_button.place(relx=0.5, rely=0.87, anchor=ctk.CENTER)
 
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
     back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)

@@ -8,6 +8,7 @@ CREATE SEQUENCE sklep_internetowy.rabat_id_seq;
 CREATE SEQUENCE sklep_internetowy.dostawa_id_seq;
 CREATE SEQUENCE sklep_internetowy.zamowienie_id_seq;
 CREATE SEQUENCE sklep_internetowy.zamowienie_produkt_id_seq;
+CREATE SEQUENCE sklep_internetowy.rodzaj_produktu_id_seq;
 CREATE TABLE Klient (
     KlientID INT PRIMARY KEY,
     Imie VARCHAR(100) NOT NULL CHECK (Imie <> ''),
@@ -15,14 +16,6 @@ CREATE TABLE Klient (
     Adres VARCHAR(255),
     Email VARCHAR(100),
     Numer_telefonu VARCHAR(15)
-);
-
-CREATE TABLE Produkt (
-    ProduktID INT PRIMARY KEY,
-    Nazwa VARCHAR(100) NOT NULL CHECK (Nazwa <> ''),
-    Cena DECIMAL(10,2) CHECK (Cena > 0),
-    Dostepnosc INT CHECK (Dostepnosc > 0),
-    Opis TEXT
 );
 
 CREATE TABLE Rabat (
@@ -40,6 +33,23 @@ CREATE TABLE Dostawa (
 CREATE TABLE Departament (
     DepartamentID INT PRIMARY KEY,
     Nazwa_departamentu VARCHAR(100) NOT NULL CHECK (Nazwa_departamentu <> '')
+);
+
+CREATE TABLE RodzajProduktu (
+    RodzajProduktuID INT PRIMARY KEY,
+    Nazwa VARCHAR(100) NOT NULL CHECK (Nazwa <> ''),
+    DepartamentID INT NOT NULL,
+    FOREIGN KEY (DepartamentID) REFERENCES Departament(DepartamentID)
+);
+
+CREATE TABLE Produkt (
+    ProduktID INT PRIMARY KEY,
+    Nazwa VARCHAR(100) NOT NULL CHECK (Nazwa <> ''),
+    Cena DECIMAL(10,2) CHECK (Cena > 0),
+    Dostepnosc INT CHECK (Dostepnosc > 0),
+    Opis TEXT,
+    RodzajProduktuID INT NOT NULL,
+    FOREIGN KEY (RodzajProduktuID) REFERENCES RodzajProduktu(RodzajProduktuID)
 );
 
 CREATE TABLE Pracownik (
@@ -123,8 +133,8 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION create_view_for_client(client_id INT)
 RETURNS void AS $$
 BEGIN
-    EXECUTE format('CREATE OR REPLACE VIEW view_client_%s AS SELECT z.ZamowienieID, z.data_zlozenia, z.status_zamowienia, z.metoda_platnosci, z.koszt_calkowity, p.nazwa, zp.ilosc FROM sklep_internetowy.Zamowienie z JOIN sklep_internetowy.ZamowienieProdukt zp ON z.ZamowienieID = zp.ZamowienieID JOIN sklep_internetowy.Produkt p ON zp.ProduktID = p.ProduktID WHERE z.KlientID = %s', client_id, client_id);
+    EXECUTE format('CREATE OR REPLACE VIEW view_client_%s AS SELECT z.ZamowienieID, z.data_zlozenia, z.status_zamowienia, z.metoda_platnosci, z.koszt_calkowity, p.nazwa, rp.Nazwa AS Kategoria, zp.ilosc FROM sklep_internetowy.Zamowienie z JOIN sklep_internetowy.ZamowienieProdukt zp ON z.ZamowienieID = zp.ZamowienieID JOIN sklep_internetowy.Produkt p ON zp.ProduktID = p.ProduktID JOIN sklep_internetowy.RodzajProduktu rp ON p.RodzajProduktuID = rp.RodzajProduktuID WHERE z.KlientID = %s', client_id, client_id);
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE VIEW view_products AS SELECT p.Nazwa, p.Cena, p.Dostepnosc, p.Opis FROM sklep_internetowy.Produkt p;
+CREATE OR REPLACE VIEW view_products AS SELECT p.Nazwa, p.Cena, p.Dostepnosc, p.Opis, rp.Nazwa AS Kategoria FROM sklep_internetowy.Produkt p JOIN sklep_internetowy.RodzajProduktu rp ON p.RodzajProduktuID = rp.RodzajProduktuID;
