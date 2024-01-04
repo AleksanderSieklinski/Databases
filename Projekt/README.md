@@ -38,7 +38,6 @@ W aplikacji znajdują się dwie funkcje: `login` oraz `register`. Funkcja `login
 
 ## Żródła
 
-List your references here.
 - https://www.postgresql.org/docs/9.1/sql-createtrigger.html
 - https://www.postgresql.org/docs/9.1/sql-createview.html
 - https://docs.python.org/3/library/tkinter.html
