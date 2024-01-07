@@ -15,23 +15,28 @@ Aby aplikacja działała poprawnie, należy zainstalować bazę danych PostgreSQ
 Aplikacja posiada prosty interfejs graficzny. Po uruchomieniu aplikacji, użytkownikowi wyświetla się okno logowania przez podanie swojego imienia i nazwiska. Istnieje również możliwość utworzenia nowego konta. Po zalogowaniu się, użytkownikowi wyświetla się główne okno aplikacji, w którym może złożyć nowe zamówienie, sprawdzić status swoich zamówień oraz wylogować się. W zakładce `Złóż nowe zamówienie` użytkownik może złożyć nowe zamówienie, wybierając produkty z listy, sposób dostawy, rabat i płatności. W zakładce `Sprawdź swoje zamówienia` użytkownik może sprawdzić status swoich zamówień. Status zamówienia jest zmieniany każdego następnego dnia po jego złożeniu na `Złożono`, `Wysłano` i `Dostarczono`. W zakładce `Wyloguj się` użytkownik może wylogować się z aplikacji.
 
 ![Alt text](image-1.png)
-Okno do wyboru logowania lub rejestracji
+*Okno do wyboru logowania lub rejestracji*
+
 ![Alt text](image-2.png)
-Okno logowania
+*Okno logowania*
+
 ![Alt text](image-3.png)
-Okno rejestracji
+*Okno rejestracji*
 ### Instrukcja użytkowania
 
 Aby złożyć nowe zamówienie, należy wybrać ilość różnych produktów do zamówienia, sposób dostawy, rabat i płatności. Następnie należy kliknąć przycisk `Dalej`. Po kliknięciu przycisku `Dalej` wyświetli się okno z wyborem produktu i jego ilości. Po wybraniu produktu i jego ilości należy kliknąć przycisk `Dodaj`. Nowe okno wyświetli się tyle razy ile różnych produktów chcemy zamówić. Po zakończeniu procesu wystarczy kliknąć przycisk `Wróć` aby wrócić do głównego okna aplikacji. Aby sprawdzić status swoich zamówień, należy kliknąć przycisk `Sprawdź swoje zamówienia`. Wyświetli się okno z listą zamówień. Aby wylogować się z aplikacji, należy kliknąć przycisk `Wyloguj się`.
 
 ![Alt text](image-8.png)
-Okno wyboru parametrów zamówienia
+*Okno wyboru parametrów zamówienia*
+
 ![Alt text](image-9.png)
-Okno poglądowe dostępnych produktów
+*Okno poglądowe dostępnych produktów*
+
 ![Alt text](image-10.png)
-Okno poglądowe zamówień
+*Okno poglądowe zamówień*
+
 ![Alt text](image-11.png)
-Okno główne zalogowanego użytkownika
+*Okno główne zalogowanego użytkownika*
 
 ## Dokumentacja techniczna
 
@@ -44,13 +49,16 @@ Aplikacja składa się z dwóch głównych części: interfejsu graficznego oraz
 W aplikacji znajdują się dwie stałe: `User` oraz `Admin`. Stała `User` odpowiada za użytkownika, który może przeglądać ofertę sklepu, dodawać produkty do koszyka, składać zamówienia oraz sprawdzać status zamówień oglądając tylko część informacji o swoich zamówionych produktach. Stała `Admin` odpowiada za administratora, który może dodawać, usuwać i modyfikować wszystkie dane w bazie. Ma on również możliwość wyświetlenia wszystkich danych w bazie, w przeciwności do użytkownika.
 
 ![Alt text](image-4.png)
-Okno administratora admin access
+*Okno administratora admin access*
+
 ![Alt text](image-5.png)
-Okno głowne zalogowanego administratora
+*Okno głowne zalogowanego administratora*
+
 ![Alt text](image-6.png)
-Okno podglądu wszystkich danych w bazie
+*Okno podglądu wszystkich danych w bazie*
+
 ![Alt text](image-7.png)
-Przykładowe okno podglądu tabeli danych w bazie
+*Przykładowe okno podglądu tabeli danych w bazie*
 
 ### Opisy funkcji bazodanowych
 
