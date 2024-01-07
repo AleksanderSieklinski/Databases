@@ -167,13 +167,16 @@ def main_page():
 
     root.title("Sklep internetowy")
     root.geometry("500x500")
-
-    global connection
-    cursor = connection.cursor()
-    query = "SELECT sklep_internetowy.update_all_order_status();"
-    cursor.execute(query)
-    connection.commit()
-    cursor.close()
+    try:
+        global connection
+        cursor = connection.cursor()
+        query = "SELECT sklep_internetowy.update_all_order_status();"
+        cursor.execute(query)
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
 
     if not is_logged_in:
         login_button = ctk.CTkButton(root, text="Zaloguj się", command=login)
@@ -242,29 +245,32 @@ def orders_page():
         widget.destroy()
         
     root.geometry("1600x500")
-    
-    global connection
-    cursor = connection.cursor()
+    try:
+        global connection
+        cursor = connection.cursor()
 
-    global logged_id
-    cursor.execute("SELECT sklep_internetowy.create_view_for_client(%s)", (logged_id,))
-    cursor.execute("SELECT * FROM view_client_%s", (logged_id,))
-    rows = cursor.fetchall()
+        global logged_id
+        cursor.execute("SELECT sklep_internetowy.create_view_for_client(%s)", (logged_id,))
+        cursor.execute("SELECT * FROM view_client_%s", (logged_id,))
+        rows = cursor.fetchall()
 
-    column_names = [description[0] for description in cursor.description]
+        column_names = [description[0] for description in cursor.description]
 
-    treeview = tk_ttk.Treeview(root, columns=column_names, show='headings')
+        treeview = tk_ttk.Treeview(root, columns=column_names, show='headings')
 
-    for col_name in column_names:
-        treeview.heading(col_name, text=col_name)
+        for col_name in column_names:
+            treeview.heading(col_name, text=col_name)
 
-    for row in rows:
-        treeview.insert('', 'end', values=row)
+        for row in rows:
+            treeview.insert('', 'end', values=row)
 
-    treeview.pack()
+        treeview.pack()
 
-    connection.commit()
-    cursor.close()
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
 
     back_button = ctk.CTkButton(root, text="Wróć", command=main_page)
     back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)
@@ -282,26 +288,30 @@ def new_order_page():
     popup.back_button = ctk.CTkButton(popup, text="Wyjdź", command=popup.destroy)
     popup.back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)
 
-    global connection
-    cursor = connection.cursor()
+    try:
+        global connection
+        cursor = connection.cursor()
 
-    cursor.execute("SELECT * FROM sklep_internetowy.view_products")
-    rows = cursor.fetchall()
+        cursor.execute("SELECT * FROM sklep_internetowy.view_products")
+        rows = cursor.fetchall()
 
-    column_names = [description[0] for description in cursor.description]
+        column_names = [description[0] for description in cursor.description]
 
-    treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
+        treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
 
-    for col_name in column_names:
-        treeview.heading(col_name, text=col_name)
+        for col_name in column_names:
+            treeview.heading(col_name, text=col_name)
 
-    for row in rows:
-        treeview.insert('', 'end', values=row)
+        for row in rows:
+            treeview.insert('', 'end', values=row)
 
-    treeview.pack()
+        treeview.pack()
 
-    connection.commit()
-    cursor.close()
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
 
     delivery_types = ["kurier", "odbiór w punkcie", "paczkomat"]
     payment_methods = ["karta", "przelew", "gotówka"]
@@ -339,51 +349,55 @@ def new_order_page():
     how_many_types_entry.place(relx=0.85, rely=0.2, anchor=ctk.CENTER)
 
     def add_order_to_db():
-        global connection
-        cur = connection.cursor()
-        query = "SELECT 1 FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie)"
-        cur.execute(query)
-        if cur.fetchone() is None:
-            print("There are no free employees. Please try again later.")
-            return
-        query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s"
-        cur.execute(query, (product_delivery_entry.get(),))
-        if cur.fetchone() is None:
-            print("The delivery method does not exist.")
-            return
-        methods = ["karta", "przelew", "gotówka"]
-        if payment_method_entry.get() not in methods:
-            print("Invalid payment method.")
-            return
-        query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s"
-        cur.execute(query, (product_discount_entry.get(),))
-        if cur.fetchone() is None:
-            print("The discount does not exist.")
-            return
+        try:
+            global connection
+            cur = connection.cursor()
+            query = "SELECT 1 FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie)"
+            cur.execute(query)
+            if cur.fetchone() is None:
+                print("There are no free employees. Please try again later.")
+                return
+            query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s"
+            cur.execute(query, (product_delivery_entry.get(),))
+            if cur.fetchone() is None:
+                print("The delivery method does not exist.")
+                return
+            methods = ["karta", "przelew", "gotówka"]
+            if payment_method_entry.get() not in methods:
+                print("Invalid payment method.")
+                return
+            query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s"
+            cur.execute(query, (product_discount_entry.get(),))
+            if cur.fetchone() is None:
+                print("The discount does not exist.")
+                return
 
-        query = "SELECT Wartosc_znizki FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s"
-        cur.execute(query, (product_discount_entry.get(),))
-        discounted_percent = cur.fetchone()[0]/100
+            query = "SELECT Wartosc_znizki FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s"
+            cur.execute(query, (product_discount_entry.get(),))
+            discounted_percent = cur.fetchone()[0]/100
 
-        query = '''INSERT INTO sklep_internetowy.Zamowienie (ZamowienieID, Data_zlozenia, Status_zamowienia, Metoda_platnosci, KlientID, RabatID, DostawaID, PracownikID, Koszt_calkowity)
-        VALUES 
-        (nextval('sklep_internetowy.zamowienie_id_seq'), 
-        current_date, 
-        'brak produktów', 
-        %s,
-        (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s),
-        (SELECT RabatID FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s),
-        (SELECT DostawaID FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s),
-        (SELECT PracownikID FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie) LIMIT 1),
-        %s)
-        '''
-        cur.execute(query, (payment_method_entry.get(), logged_name, logged_surname, product_discount_entry.get(), product_delivery_entry.get(), 0))
+            query = '''INSERT INTO sklep_internetowy.Zamowienie (ZamowienieID, Data_zlozenia, Status_zamowienia, Metoda_platnosci, KlientID, RabatID, DostawaID, PracownikID, Koszt_calkowity)
+            VALUES 
+            (nextval('sklep_internetowy.zamowienie_id_seq'), 
+            current_date, 
+            'brak produktów', 
+            %s,
+            (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s),
+            (SELECT RabatID FROM sklep_internetowy.Rabat WHERE rodzaj_znizki = %s),
+            (SELECT DostawaID FROM sklep_internetowy.Dostawa WHERE sposob_dostawy = %s),
+            (SELECT PracownikID FROM sklep_internetowy.Pracownik WHERE PracownikID NOT IN (SELECT PracownikID FROM sklep_internetowy.Zamowienie) LIMIT 1),
+            %s)
+            '''
+            cur.execute(query, (payment_method_entry.get(), logged_name, logged_surname, product_discount_entry.get(), product_delivery_entry.get(), 0))
 
-        query = "SELECT ZamowienieID FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s) ORDER BY ZamowienieID DESC LIMIT 1"
-        cur.execute(query, (logged_name, logged_surname))
-        zamowienieid = cur.fetchone()[0]
-        connection.commit()
-        cur.close()
+            query = "SELECT ZamowienieID FROM sklep_internetowy.Zamowienie WHERE KlientID = (SELECT KlientID FROM sklep_internetowy.Klient WHERE Imie = %s AND Nazwisko = %s) ORDER BY ZamowienieID DESC LIMIT 1"
+            cur.execute(query, (logged_name, logged_surname))
+            zamowienieid = cur.fetchone()[0]
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
 
         def open_window(i=0):
             if i < int(how_many_types_entry.get()):
@@ -408,30 +422,34 @@ def new_order_page():
                 amount_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
                 def add_product_to_db():
-                    global connection
-                    cur = connection.cursor()
-                    connection.commit()
-                    query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
-                    cur.execute(query, (product_name_entry.get(),))
-                    if cur.fetchone() is None:
-                        print("Produkt nie istnieje")
-                        return
-                    query = "SELECT dostepnosc FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
-                    cur.execute(query, (product_name_entry.get(),))
-                    if cur.fetchone()[0] < int(amount_entry.get()):
-                        print("Nie ma tyle produktów na stanie")
-                        return
-                    query = '''INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES 
-                    (nextval('sklep_internetowy.zamowienie_produkt_id_seq'), 
-                    %s, 
-                    (SELECT ProduktID FROM sklep_internetowy.Produkt WHERE Nazwa = %s), %s)'''
-                    cur.execute(query, (zamowienieid, product_name_entry.get(), int(amount_entry.get())))
-                    query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc - %s WHERE Nazwa = %s"
-                    cur.execute(query, (int(amount_entry.get()), product_name_entry.get()))
-                    print("Zamowienie dodane")
-                    connection.commit()
-                    cur.close()
-                    popup.destroy()
+                    try:
+                        global connection
+                        cur = connection.cursor()
+                        connection.commit()
+                        query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+                        cur.execute(query, (product_name_entry.get(),))
+                        if cur.fetchone() is None:
+                            print("Produkt nie istnieje")
+                            return
+                        query = "SELECT dostepnosc FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+                        cur.execute(query, (product_name_entry.get(),))
+                        if cur.fetchone()[0] < int(amount_entry.get()):
+                            print("Nie ma tyle produktów na stanie")
+                            return
+                        query = '''INSERT INTO sklep_internetowy.ZamowienieProdukt (ZamowienieProduktID, ZamowienieID, ProduktID, Ilosc) VALUES 
+                        (nextval('sklep_internetowy.zamowienie_produkt_id_seq'), 
+                        %s, 
+                        (SELECT ProduktID FROM sklep_internetowy.Produkt WHERE Nazwa = %s), %s)'''
+                        cur.execute(query, (zamowienieid, product_name_entry.get(), int(amount_entry.get())))
+                        query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc - %s WHERE Nazwa = %s"
+                        cur.execute(query, (int(amount_entry.get()), product_name_entry.get()))
+                        print("Zamowienie dodane")
+                        connection.commit()
+                    except (Exception, psycopg2.DatabaseError) as error:
+                        print(error)
+                    finally:
+                        cur.close()
+                        popup.destroy()
 
                 add_button = ctk.CTkButton(popup, text="Dodaj", command=lambda:[add_product_to_db(), open_window(i+1)])
                 add_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER)
@@ -451,27 +469,30 @@ def delete_order_and_connected_products():
 
     popup = tk.Toplevel()
     popup.wm_title("Dostępne zamówienia")
+    try:
+        global connection
+        cursor = connection.cursor()
 
-    global connection
-    cursor = connection.cursor()
+        cursor.execute("SELECT * FROM sklep_internetowy.Zamowienie")
+        rows = cursor.fetchall()
 
-    cursor.execute("SELECT * FROM sklep_internetowy.Zamowienie")
-    rows = cursor.fetchall()
+        column_names = [description[0] for description in cursor.description]
+        
+        treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
 
-    column_names = [description[0] for description in cursor.description]
-    
-    treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
+        for col_name in column_names:
+            treeview.heading(col_name, text=col_name)
 
-    for col_name in column_names:
-        treeview.heading(col_name, text=col_name)
+        for row in rows:
+            treeview.insert('', 'end', values=row)
 
-    for row in rows:
-        treeview.insert('', 'end', values=row)
+        treeview.pack()
 
-    treeview.pack()
-
-    connection.commit()
-    cursor.close()
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
 
     order_id_label = ctk.CTkLabel(root, text="ID zamówienia")
     order_id_label.place(relx=0.5, rely=0.1, anchor=ctk.CENTER)
@@ -480,19 +501,23 @@ def delete_order_and_connected_products():
     order_id_entry.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
 
     def delete_order_and_connected_products_from_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        query = "SELECT 1 FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s"
-        cur.execute(query, (order_id_entry.get(),))
-        if cur.fetchone() is None:
-            print("To zamówienie nie istnieje")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s"
+            cur.execute(query, (order_id_entry.get(),))
+            if cur.fetchone() is None:
+                print("To zamówienie nie istnieje")
+                return
 
-        cur.execute("DELETE FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s", (order_id_entry.get(),))
+            cur.execute("DELETE FROM sklep_internetowy.Zamowienie WHERE ZamowienieID = %s", (order_id_entry.get(),))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Zamowienie usunięte")
 
     delete_button = ctk.CTkButton(root, text="Usuń", command=delete_order_and_connected_products_from_db)
@@ -512,20 +537,24 @@ def add_department():
     department_name_entry.place(relx=0.5, rely=0.2, anchor=ctk.CENTER)
 
     def add_department_to_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        query = "SELECT 1 FROM sklep_internetowy.Departament WHERE Nazwa_departamentu = %s"
-        cur.execute(query, (department_name_entry.get(),))
-        if cur.fetchone() is not None:
-            print("Departament już istnieje.")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.Departament WHERE Nazwa_departamentu = %s"
+            cur.execute(query, (department_name_entry.get(),))
+            if cur.fetchone() is not None:
+                print("Departament już istnieje.")
+                return
 
-        query = "INSERT INTO sklep_internetowy.Departament (DepartamentID, Nazwa_departamentu) VALUES (nextval('sklep_internetowy.departament_id_seq'), %s)"
-        cur.execute(query, (department_name_entry.get(),))
+            query = "INSERT INTO sklep_internetowy.Departament (DepartamentID, Nazwa_departamentu) VALUES (nextval('sklep_internetowy.departament_id_seq'), %s)"
+            cur.execute(query, (department_name_entry.get(),))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Departament dodany")
 
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_department_to_db)
@@ -551,24 +580,27 @@ def add_category():
     department_name_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
     def add_category_to_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        query = "SELECT 1 FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s"
-        cur.execute(query, (category_name_entry.get(),))
-        if cur.fetchone() is not None:
-            print("Kategoria już istnieje.")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s"
+            cur.execute(query, (category_name_entry.get(),))
+            if cur.fetchone() is not None:
+                print("Kategoria już istnieje.")
+                return
 
-        query = '''INSERT INTO sklep_internetowy.RodzajProduktu (RodzajProduktuID, Nazwa, DepartamentID) VALUES 
-        (nextval('sklep_internetowy.rodzaj_produktu_id_seq'), 
-        %s, 
-        (SELECT DepartamentID FROM sklep_internetowy.Departament WHERE Nazwa_departamentu = %s))
-        '''
-        cur.execute(query, (category_name_entry.get(), department_name_entry.get()))
-
-        connection.commit()
-        cur.close()
+            query = '''INSERT INTO sklep_internetowy.RodzajProduktu (RodzajProduktuID, Nazwa, DepartamentID) VALUES 
+            (nextval('sklep_internetowy.rodzaj_produktu_id_seq'), 
+            %s, 
+            (SELECT DepartamentID FROM sklep_internetowy.Departament WHERE Nazwa_departamentu = %s))
+            '''
+            cur.execute(query, (category_name_entry.get(), department_name_entry.get()))
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Kategoria dodana")
 
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_category_to_db)
@@ -594,20 +626,24 @@ def add_delivery():
     delivery_price_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
     def add_delivery_to_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE Sposob_dostawy = %s"
-        cur.execute(query, (delivery_method_entry.get(),))
-        if cur.fetchone() is not None:
-            print("Dostawa już istnieje.")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.Dostawa WHERE Sposob_dostawy = %s"
+            cur.execute(query, (delivery_method_entry.get(),))
+            if cur.fetchone() is not None:
+                print("Dostawa już istnieje.")
+                return
 
-        query = "INSERT INTO sklep_internetowy.Dostawa (DostawaID, Sposob_dostawy, Koszt_dostawy) VALUES (nextval('sklep_internetowy.dostawa_id_seq'), %s, %s)"
-        cur.execute(query, (delivery_method_entry.get(), float(delivery_price_entry.get())))
+            query = "INSERT INTO sklep_internetowy.Dostawa (DostawaID, Sposob_dostawy, Koszt_dostawy) VALUES (nextval('sklep_internetowy.dostawa_id_seq'), %s, %s)"
+            cur.execute(query, (delivery_method_entry.get(), float(delivery_price_entry.get())))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Dostawa dodana")
 
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_delivery_to_db)
@@ -639,19 +675,23 @@ def add_employee():
     department_id_entry.place(relx=0.5, rely=0.6, anchor=ctk.CENTER)
 
     def add_employee_to_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        cur.execute("SELECT 1 FROM sklep_internetowy.Departament WHERE DepartamentID = %s", (department_id_entry.get(),))
-        if cur.fetchone() is None:
-            print("Nie ma takiego departamentu")
-            return
+            cur.execute("SELECT 1 FROM sklep_internetowy.Departament WHERE DepartamentID = %s", (department_id_entry.get(),))
+            if cur.fetchone() is None:
+                print("Nie ma takiego departamentu")
+                return
 
-        query = "INSERT INTO sklep_internetowy.Pracownik (PracownikID, Imie, Nazwisko, DepartamentID) VALUES (nextval('sklep_internetowy.pracownik_id_seq'), %s, %s, %s)"
-        cur.execute(query, (name_entry.get(), surname_entry.get(), department_id_entry.get()))
+            query = "INSERT INTO sklep_internetowy.Pracownik (PracownikID, Imie, Nazwisko, DepartamentID) VALUES (nextval('sklep_internetowy.pracownik_id_seq'), %s, %s, %s)"
+            cur.execute(query, (name_entry.get(), surname_entry.get(), department_id_entry.get()))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Pracownik dodany")
 
     add_button = ctk.CTkButton(root, text="Dodaj", command=add_employee_to_db)
@@ -666,27 +706,30 @@ def add_product():
 
     popup = tk.Toplevel()
     popup.wm_title("Dostępne kategorie")
+    try:
+        global connection
+        cursor = connection.cursor()
 
-    global connection
-    cursor = connection.cursor()
+        cursor.execute("SELECT Nazwa FROM sklep_internetowy.RodzajProduktu")
+        rows = cursor.fetchall()
 
-    cursor.execute("SELECT Nazwa FROM sklep_internetowy.RodzajProduktu")
-    rows = cursor.fetchall()
+        column_names = [description[0] for description in cursor.description]
 
-    column_names = [description[0] for description in cursor.description]
+        treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
 
-    treeview = tk_ttk.Treeview(popup, columns=column_names, show='headings')
+        for col_name in column_names:
+            treeview.heading(col_name, text=col_name)
 
-    for col_name in column_names:
-        treeview.heading(col_name, text=col_name)
+        for row in rows:
+            treeview.insert('', 'end', values=row)
 
-    for row in rows:
-        treeview.insert('', 'end', values=row)
+        treeview.pack()
 
-    treeview.pack()
-
-    connection.commit()
-    cursor.close()
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
 
     nazwa_label = ctk.CTkLabel(root, text="Nazwa")
     nazwa_label.place(relx=0.5, rely=0.08, anchor=ctk.CENTER)
@@ -719,20 +762,24 @@ def add_product():
     category_entry.place(relx=0.5, rely=0.8, anchor=ctk.CENTER)
 
     def add_product_to_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
-        cur.execute(query, (nazwa_entry.get(),))
-        if cur.fetchone() is not None:
-            print("Produkt już istnieje.")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+            cur.execute(query, (nazwa_entry.get(),))
+            if cur.fetchone() is not None:
+                print("Produkt już istnieje.")
+                return
 
-        query = "INSERT INTO sklep_internetowy.Produkt (ProduktID, Nazwa, Cena, Dostepnosc, Opis, RodzajProduktuID) VALUES (nextval('sklep_internetowy.produkt_id_seq'), %s, %s, %s, %s, (SELECT RodzajProduktuID FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s))"
-        cur.execute(query, (nazwa_entry.get(), float(cena_entry.get()), int(dostepnosc_entry.get()), opis_entry.get(), category_entry.get()))
+            query = "INSERT INTO sklep_internetowy.Produkt (ProduktID, Nazwa, Cena, Dostepnosc, Opis, RodzajProduktuID) VALUES (nextval('sklep_internetowy.produkt_id_seq'), %s, %s, %s, %s, (SELECT RodzajProduktuID FROM sklep_internetowy.RodzajProduktu WHERE Nazwa = %s))"
+            cur.execute(query, (nazwa_entry.get(), float(cena_entry.get()), int(dostepnosc_entry.get()), opis_entry.get(), category_entry.get()))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Produkt dodany")
 
 
@@ -760,20 +807,24 @@ def add_discount():
     wartosc_znizki_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
     def add_discount_to_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE Rodzaj_znizki = %s"
-        cur.execute(query, (rodzaj_znizki_entry.get(),))
-        if cur.fetchone() is not None:
-            print("Zniżka już istnieje.")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.Rabat WHERE Rodzaj_znizki = %s"
+            cur.execute(query, (rodzaj_znizki_entry.get(),))
+            if cur.fetchone() is not None:
+                print("Zniżka już istnieje.")
+                return
 
-        query = "INSERT INTO sklep_internetowy.Rabat (RabatID, Rodzaj_znizki, Wartosc_znizki) VALUES (nextval('sklep_internetowy.rabat_id_seq'), %s, %s)"
-        cur.execute(query, (rodzaj_znizki_entry.get(), float(wartosc_znizki_entry.get())))
+            query = "INSERT INTO sklep_internetowy.Rabat (RabatID, Rodzaj_znizki, Wartosc_znizki) VALUES (nextval('sklep_internetowy.rabat_id_seq'), %s, %s)"
+            cur.execute(query, (rodzaj_znizki_entry.get(), float(wartosc_znizki_entry.get())))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Zniżka dodana")
 
 
@@ -800,24 +851,28 @@ def refill_product():
     amount_entry.place(relx=0.5, rely=0.4, anchor=ctk.CENTER)
 
     def refill_product_in_db():
-        global connection
-        cur = connection.cursor()
+        try:
+            global connection
+            cur = connection.cursor()
 
-        if int(amount_entry.get()) < 0:
-            print("Nie można uzupełnić produktu o ujemną ilość")
-            return
+            if int(amount_entry.get()) < 0:
+                print("Nie można uzupełnić produktu o ujemną ilość")
+                return
 
-        query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
-        cur.execute(query, (product_name_entry.get(),))
-        if cur.fetchone() is None:
-            print("Produkt nie istnieje")
-            return
+            query = "SELECT 1 FROM sklep_internetowy.Produkt WHERE Nazwa = %s"
+            cur.execute(query, (product_name_entry.get(),))
+            if cur.fetchone() is None:
+                print("Produkt nie istnieje")
+                return
 
-        query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc + %s WHERE Nazwa = %s"
-        cur.execute(query, (int(amount_entry.get()), product_name_entry.get()))
+            query = "UPDATE sklep_internetowy.Produkt SET Dostepnosc = Dostepnosc + %s WHERE Nazwa = %s"
+            cur.execute(query, (int(amount_entry.get()), product_name_entry.get()))
 
-        connection.commit()
-        cur.close()
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            cur.close()
         print("Produkt uzupełniony")
 
 
@@ -864,30 +919,38 @@ def show_all_tables_page():
     back_button.place(relx=0.5, rely=0.95, anchor=ctk.CENTER)
 
 def how_many_columns(table_name):
-    global connection
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM sklep_internetowy.{0} LIMIT 0".format(table_name))
-    colnames = [desc[0] for desc in cursor.description]
-    connection.commit()
-    cursor.close()
+    try:
+        global connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM sklep_internetowy.{0} LIMIT 0".format(table_name))
+        colnames = [desc[0] for desc in cursor.description]
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
     return len(colnames)
 
 def show_all_records(table_name):
-    global connection
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM sklep_internetowy.{0} LIMIT 0".format(table_name))
-    colnames = [desc[0] for desc in cursor.description]
-    query = "SELECT * FROM sklep_internetowy.{0}".format(table_name)
-    cursor.execute(query)
-    records = cursor.fetchall()
-    treeview = tk_ttk.Treeview(root, columns=colnames, show='headings')
-    for col_name in colnames:
-        treeview.heading(col_name, text=col_name)
-    for record in records:
-        treeview.insert('', 'end', values=record)
-    treeview.pack()
-    connection.commit()
-    cursor.close()
+    try:
+        global connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM sklep_internetowy.{0} LIMIT 0".format(table_name))
+        colnames = [desc[0] for desc in cursor.description]
+        query = "SELECT * FROM sklep_internetowy.{0}".format(table_name)
+        cursor.execute(query)
+        records = cursor.fetchall()
+        treeview = tk_ttk.Treeview(root, columns=colnames, show='headings')
+        for col_name in colnames:
+            treeview.heading(col_name, text=col_name)
+        for record in records:
+            treeview.insert('', 'end', values=record)
+        treeview.pack()
+        connection.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        cursor.close()
 
 def show_table(table_name):
     for widget in root.winfo_children():
