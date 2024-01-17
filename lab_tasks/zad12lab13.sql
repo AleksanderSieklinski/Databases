@@ -8,19 +8,6 @@ FROM (
 ) AS subquery
 GROUP BY ROLLUP (id_kurs, id_zaj)
 ORDER BY id_kurs, id_zaj;
---Zad3
-set search_path to kurs;
-SELECT id_kurs, id_zaj,
-       ROW_NUMBER() OVER(PARTITION BY id_kurs ORDER BY COUNT(*) DESC) AS row_number,
-       COUNT(*) AS sum,
-       SUM(COUNT(*)) OVER(PARTITION BY id_kurs) AS total_sum
-FROM (
-    SELECT id_kurs, id_zaj
-    FROM uczest_zaj
-    WHERE obec = 1
-) AS subquery
-GROUP BY id_kurs, id_zaj
-ORDER BY id_kurs, row_number;
 -- Zad2
 set search_path to kurs;
 CREATE EXTENSION IF NOT EXISTS tablefunc;
@@ -54,3 +41,16 @@ SELECT * FROM (
   ) AS ct (grupa INT, z1 INT, z2 INT, z3 INT, z4 INT, z5 INT, z6 INT, z7 INT, z8 INT, z9 INT, z10 INT)
 ) AS final
 ORDER BY grupa;
+--Zad3
+set search_path to kurs;
+SELECT id_kurs, id_zaj,
+       ROW_NUMBER() OVER(PARTITION BY id_kurs ORDER BY COUNT(*) DESC) AS row_number,
+       COUNT(*) AS sum,
+       SUM(COUNT(*)) OVER(PARTITION BY id_kurs) AS total_sum
+FROM (
+    SELECT id_kurs, id_zaj
+    FROM uczest_zaj
+    WHERE obec = 1
+) AS subquery
+GROUP BY id_kurs, id_zaj
+ORDER BY id_kurs, row_number;

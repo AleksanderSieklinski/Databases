@@ -6,7 +6,7 @@ import psycopg2
 def connect_to_database():
     try:
         connection = psycopg2.connect(
-            dbname="oqphqlwh",
+            dbname="oqphqlwh", #nothing important here :)
             user="oqphqlwh",
             password="UfuSqf7Y0_8jfVrkdXT-E8YTNWwTECtm",
             host="dumbo.db.elephantsql.com"
